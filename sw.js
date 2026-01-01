@@ -1,5 +1,5 @@
 // Service Worker для PWA
-const CACHE_NAME = 'opravdatel3000-v1';
+const CACHE_NAME = 'opravdatel3000-v2';
 const urlsToCache = [
     './',
     './index.html',
