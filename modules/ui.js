@@ -59,6 +59,14 @@ export class UI {
             this.voteExcuse('dislike');
         });
 
+        document.getElementById('btn-super-like').addEventListener('click', () => {
+            this.superLikeExcuse();
+        });
+
+        document.getElementById('btn-close-favorites').addEventListener('click', () => {
+            this.hideFavorites();
+        });
+
         // Enter в поле ИИ
         const aiInput = document.getElementById('ai-input');
         if (aiInput) {
@@ -426,6 +434,150 @@ export class UI {
         const terminalContent = document.getElementById('terminal-content');
         if (terminalContent) {
             terminalContent.innerHTML = '<span class="cursor-blink">Нажмите кнопку для новой отговорки...</span>';
+        }
+    }
+    
+    // Супер лайк (лайк + избранное)
+    superLikeExcuse() {
+        if (!this.currentExcuse) {
+            return;
+        }
+
+        // Проверяем, не голосовал ли уже пользователь
+        if (this.storage.hasVoted(this.currentExcuse.text)) {
+            return; // Уже проголосовал, блокируем
+        }
+
+        // Анимация супер лайка как в Tinder
+        const terminal = document.getElementById('terminal');
+        if (terminal) {
+            terminal.classList.add('super-like-animation');
+            
+            // Создаем эффект звездочек
+            this.createSuperLikeEffect(terminal);
+            
+            // После анимации обновляем данные
+            setTimeout(() => {
+                // Лайкаем
+                const likes = this.storage.likeExcuse(this.currentExcuse.text);
+                if (likes !== false) {
+                    // Добавляем в избранное
+                    this.storage.saveToCollection(this.currentExcuse);
+                    
+                    const btn = document.getElementById('btn-super-like');
+                    if (btn) {
+                        btn.classList.add('voted');
+                    }
+                    this.updateVotingCounts();
+                    this.loadTopExcuses();
+                    this.loadFavorites(); // Обновляем список избранного
+                }
+                
+                // Убираем класс анимации и скрываем панель голосования
+                terminal.classList.remove('super-like-animation');
+                this.hideVotingPanel();
+                
+                // Показываем сообщение о следующей отговорке
+                setTimeout(() => {
+                    this.showNextExcuseMessage();
+                }, 300);
+            }, 800);
+        }
+    }
+    
+    // Создать эффект звездочек для супер лайка
+    createSuperLikeEffect(container) {
+        const starCount = 20;
+        const colors = ['#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00CED1'];
+        
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'super-like-star';
+            star.style.left = `${50 + (Math.random() - 0.5) * 40}%`;
+            star.style.top = `${50 + (Math.random() - 0.5) * 40}%`;
+            star.style.color = colors[Math.floor(Math.random() * colors.length)];
+            star.style.animationDelay = `${Math.random() * 0.3}s`;
+            star.textContent = '⭐';
+            container.appendChild(star);
+            
+            setTimeout(() => {
+                star.remove();
+            }, 1000);
+        }
+    }
+    
+    // Показать избранные отговорки
+    showFavorites() {
+        const favoritesSection = document.getElementById('favorites-section');
+        if (favoritesSection) {
+            this.loadFavorites();
+            favoritesSection.style.display = 'block';
+        }
+    }
+    
+    // Скрыть избранные отговорки
+    hideFavorites() {
+        const favoritesSection = document.getElementById('favorites-section');
+        if (favoritesSection) {
+            favoritesSection.style.display = 'none';
+        }
+    }
+    
+    // Загрузить избранные отговорки
+    loadFavorites() {
+        const favoritesList = document.getElementById('favorites-list');
+        if (!favoritesList) return;
+        
+        const favorites = this.storage.getCollection();
+        
+        if (favorites.length === 0) {
+            favoritesList.innerHTML = '<div class="empty-message">У вас пока нет избранных отговорок. Используйте ⭐ для добавления!</div>';
+        } else {
+            favoritesList.innerHTML = favorites.map(item => `
+                <div class="favorite-item">
+                    <div class="favorite-text">${item.text}</div>
+                    <div class="favorite-actions">
+                        <button class="favorite-btn favorite-copy" data-text="${item.text}" title="Копировать">📋</button>
+                        <button class="favorite-btn favorite-remove" data-id="${item.id}" title="Удалить">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Добавляем обработчики событий
+            favoritesList.querySelectorAll('.favorite-copy').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    this.copyToClipboard(e.target.dataset.text);
+                });
+            });
+            
+            favoritesList.querySelectorAll('.favorite-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    this.removeFavorite(parseInt(e.target.dataset.id));
+                });
+            });
+        }
+    }
+    
+    // Удалить из избранного
+    removeFavorite(id) {
+        this.storage.removeFromCollection(id);
+        this.loadFavorites();
+    }
+    
+    // Копировать в буфер обмена
+    async copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            // Визуальная обратная связь
+            const btn = event?.target;
+            if (btn) {
+                btn.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 200);
+            }
+        } catch (err) {
+            console.error('Failed to copy:', err);
         }
     }
     

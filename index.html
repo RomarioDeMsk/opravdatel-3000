@@ -77,6 +77,17 @@
                 </div>
             </div>
 
+            <!-- Избранные отговорки -->
+            <div class="favorites-section" id="favorites-section" style="display: none;">
+                <div class="favorites-header">
+                    <h2 class="section-title">⭐ Избранные отговорки</h2>
+                    <button class="btn-close-favorites" id="btn-close-favorites" title="Закрыть">×</button>
+                </div>
+                <div class="favorites-list" id="favorites-list">
+                    <!-- Заполнится через JS -->
+                </div>
+            </div>
+
             <!-- Генератор отговорок -->
             <div class="excuse-display-wrapper">
                 <div class="excuse-display-header">
@@ -102,6 +113,9 @@
                             <button class="vote-btn vote-like" id="btn-like" title="Понравилось">
                                 <span class="vote-icon">👍</span>
                                 <span class="vote-count" id="like-count">0</span>
+                            </button>
+                            <button class="vote-btn vote-super-like" id="btn-super-like" title="Супер лайк! (в избранное)">
+                                <span class="vote-icon">⭐</span>
                             </button>
                             <button class="vote-btn vote-dislike" id="btn-dislike" title="Не понравилось">
                                 <span class="vote-icon">👎</span>

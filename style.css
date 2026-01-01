@@ -857,6 +857,119 @@ body::after {
     height: 300px;
 }
 
+/* ===== ИЗБРАННЫЕ ОТГОВОРКИ ===== */
+.favorites-section {
+    background: var(--bg-elevated);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.favorites-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-close-favorites {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+}
+
+.btn-close-favorites:hover {
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.favorites-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.favorite-item {
+    padding: var(--spacing-md);
+    background: var(--bg-glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: all var(--transition-base);
+}
+
+.favorite-item:hover {
+    background: var(--bg-glass-strong);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.favorite-text {
+    flex: 1;
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.favorite-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.favorite-btn {
+    background: var(--bg-glass);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: 1rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+}
+
+.favorite-btn:hover {
+    background: var(--bg-glass-strong);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.favorite-btn.favorite-remove:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.favorite-btn.favorite-copy:hover {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
 /* ===== ПАНЕЛЬ ГОЛОСОВАНИЯ ===== */
 .voting-panel {
     display: flex;
@@ -967,6 +1080,84 @@ body::after {
 .vote-btn.vote-dislike.voted .vote-count {
     background: rgba(239, 68, 68, 0.3);
     color: #ef4444;
+}
+
+/* Кнопка супер лайка */
+.vote-btn.vote-super-like {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+    border-color: rgba(255, 215, 0, 0.4);
+    position: relative;
+    overflow: visible;
+}
+
+.vote-btn.vote-super-like:hover {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    transform: translateY(-2px) scale(1.05);
+}
+
+.vote-btn.vote-super-like.voted {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 165, 0, 0.4));
+    border-color: rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+.vote-btn.vote-super-like .vote-icon {
+    font-size: 1.8rem;
+    animation: superLikePulse 2s ease-in-out infinite;
+}
+
+@keyframes superLikePulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.1) rotate(-5deg); }
+    50% { transform: scale(1.2) rotate(5deg); }
+    75% { transform: scale(1.1) rotate(-3deg); }
+}
+
+/* Анимация супер лайка для окна */
+.super-like-animation {
+    animation: superLikeGlow 0.8s ease-out;
+}
+
+@keyframes superLikeGlow {
+    0% {
+        box-shadow: var(--shadow-xl);
+    }
+    50% {
+        box-shadow: 
+            var(--shadow-xl),
+            0 0 40px rgba(255, 215, 0, 0.8),
+            0 0 80px rgba(255, 165, 0, 0.6);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: var(--shadow-xl);
+        transform: scale(1);
+    }
+}
+
+/* Звездочки для супер лайка */
+.super-like-star {
+    position: absolute;
+    font-size: 2rem;
+    pointer-events: none;
+    z-index: 1000;
+    animation: starExplode 1s ease-out forwards;
+}
+
+@keyframes starExplode {
+    0% {
+        opacity: 1;
+        transform: scale(0) rotate(0deg) translateY(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.5) rotate(180deg) translateY(-30px);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.5) rotate(360deg) translateY(-60px);
+    }
 }
 
 .vote-btn.disabled {
