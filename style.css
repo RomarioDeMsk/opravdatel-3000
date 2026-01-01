@@ -211,10 +211,17 @@ body::after {
 
 /* ===== ПАНЕЛЬ УПРАВЛЕНИЯ ===== */
 .control-panel {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
+    justify-content: center;
+}
+
+.control-panel .btn {
+    flex: 1 1 auto;
+    min-width: 180px;
+    max-width: 250px;
 }
 
 .btn {

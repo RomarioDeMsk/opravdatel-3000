@@ -8,11 +8,17 @@ export class Storage {
 
     // Сохранить в избранное
     saveToCollection(excuse) {
+        if (!excuse || !excuse.text) {
+            console.error('Попытка сохранить пустую отговорку:', excuse);
+            return false;
+        }
+        
         const collection = this.getCollection();
         
         // Проверяем, нет ли уже такой отговорки
         const exists = collection.some(item => item.text === excuse.text);
         if (exists) {
+            console.log('Отговорка уже в избранном:', excuse.text);
             return false; // Уже есть в коллекции
         }
 
@@ -25,8 +31,14 @@ export class Storage {
         };
 
         collection.push(item);
-        localStorage.setItem(this.storageKey, JSON.stringify(collection));
-        return true;
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(collection));
+            console.log('Отговорка добавлена в избранное. Всего в избранном:', collection.length);
+            return true;
+        } catch (e) {
+            console.error('Ошибка сохранения в localStorage:', e);
+            return false;
+        }
     }
 
     // Получить коллекцию

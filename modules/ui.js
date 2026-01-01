@@ -475,14 +475,13 @@ export class UI {
                     this.updateVotingCounts();
                     this.loadTopExcuses();
                     
-                    // Обновляем список избранного и показываем раздел, если он скрыт
+                    // Обновляем список избранного и показываем раздел
                     this.loadFavorites();
                     const favoritesSection = document.getElementById('favorites-section');
-                    if (favoritesSection && saved) {
-                        // Показываем раздел избранного, если он был скрыт
-                        if (favoritesSection.style.display === 'none' || !favoritesSection.style.display) {
-                            this.showFavorites();
-                        }
+                    if (favoritesSection) {
+                        // Всегда показываем раздел избранного после супер лайка
+                        this.showFavorites();
+                        console.log('Избранное обновлено. Количество:', this.storage.getCollection().length);
                     }
                 }
                 
