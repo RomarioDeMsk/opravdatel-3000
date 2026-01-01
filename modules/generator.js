@@ -108,8 +108,29 @@ export class ExcuseGenerator {
         }
     }
 
-    // Генерация из шаблонов
+    // Генерация из шаблонов (используется только для абсурдного режима)
     generateFromTemplates(category = 'all', maxAttempts = 15) {
+        // Если шаблоны пустые, используем готовые отговорки
+        const hasTemplates = this.patterns && Object.keys(this.patterns).length > 0 && 
+                            Object.values(this.patterns).some(patterns => patterns && patterns.length > 0);
+        
+        if (!hasTemplates) {
+            // Если шаблонов нет, возвращаем случайную отговорку из базы
+            if (this.excuses.length > 0) {
+                const absurdExcuses = this.excuses.filter(e => e.isAbsurd === true);
+                if (absurdExcuses.length > 0) {
+                    return absurdExcuses[Math.floor(Math.random() * absurdExcuses.length)];
+                }
+                return this.excuses[Math.floor(Math.random() * this.excuses.length)];
+            }
+            return {
+                text: "К сожалению, база отговорок пуста.",
+                category: 'universal',
+                isAbsurd: true,
+                id: 'empty'
+            };
+        }
+        
         let attempt = 0;
         let text = '';
         let templateCategory = category;
@@ -122,7 +143,20 @@ export class ExcuseGenerator {
 
         const patterns = this.patterns[templateCategory] || this.patterns.absurd || [];
         if (patterns.length === 0) {
-            return this.generateAbsurd();
+            // Если шаблоны пустые, используем готовые отговорки
+            if (this.excuses.length > 0) {
+                const absurdExcuses = this.excuses.filter(e => e.isAbsurd === true);
+                if (absurdExcuses.length > 0) {
+                    return absurdExcuses[Math.floor(Math.random() * absurdExcuses.length)];
+                }
+                return this.excuses[Math.floor(Math.random() * this.excuses.length)];
+            }
+            return {
+                text: "Ошибка генерации.",
+                category: 'universal',
+                isAbsurd: true,
+                id: 'error'
+            };
         }
 
         // Пытаемся создать уникальную комбинацию
