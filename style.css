@@ -311,6 +311,24 @@ body::after {
     filter: brightness(1.1);
 }
 
+.btn-favorites {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+    box-shadow: var(--shadow-md), 0 0 20px rgba(255, 215, 0, 0.3);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.btn-favorites:hover {
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(255, 215, 0, 0.5);
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+}
+
+.btn-favorites.active {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.5), rgba(255, 165, 0, 0.5));
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(255, 215, 0, 0.6);
+    border-color: rgba(255, 215, 0, 0.6);
+}
+
 .btn-icon {
     font-size: 1.25rem;
     display: inline-block;

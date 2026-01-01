@@ -67,6 +67,10 @@ export class UI {
             this.hideFavorites();
         });
 
+        document.getElementById('btn-favorites').addEventListener('click', () => {
+            this.toggleFavorites();
+        });
+
         // Enter в поле ИИ
         const aiInput = document.getElementById('ai-input');
         if (aiInput) {
@@ -462,7 +466,7 @@ export class UI {
                 const likes = this.storage.likeExcuse(this.currentExcuse.text);
                 if (likes !== false) {
                     // Добавляем в избранное
-                    this.storage.saveToCollection(this.currentExcuse);
+                    const saved = this.storage.saveToCollection(this.currentExcuse);
                     
                     const btn = document.getElementById('btn-super-like');
                     if (btn) {
@@ -470,7 +474,16 @@ export class UI {
                     }
                     this.updateVotingCounts();
                     this.loadTopExcuses();
-                    this.loadFavorites(); // Обновляем список избранного
+                    
+                    // Обновляем список избранного и показываем раздел, если он скрыт
+                    this.loadFavorites();
+                    const favoritesSection = document.getElementById('favorites-section');
+                    if (favoritesSection && saved) {
+                        // Показываем раздел избранного, если он был скрыт
+                        if (favoritesSection.style.display === 'none' || !favoritesSection.style.display) {
+                            this.showFavorites();
+                        }
+                    }
                 }
                 
                 // Убираем класс анимации и скрываем панель голосования
@@ -512,6 +525,11 @@ export class UI {
         if (favoritesSection) {
             this.loadFavorites();
             favoritesSection.style.display = 'block';
+            // Обновляем состояние кнопки
+            const btn = document.getElementById('btn-favorites');
+            if (btn) {
+                btn.classList.add('active');
+            }
         }
     }
     
@@ -520,6 +538,23 @@ export class UI {
         const favoritesSection = document.getElementById('favorites-section');
         if (favoritesSection) {
             favoritesSection.style.display = 'none';
+            // Обновляем состояние кнопки
+            const btn = document.getElementById('btn-favorites');
+            if (btn) {
+                btn.classList.remove('active');
+            }
+        }
+    }
+    
+    // Переключить видимость избранного
+    toggleFavorites() {
+        const favoritesSection = document.getElementById('favorites-section');
+        if (favoritesSection) {
+            if (favoritesSection.style.display === 'none' || !favoritesSection.style.display) {
+                this.showFavorites();
+            } else {
+                this.hideFavorites();
+            }
         }
     }
     
