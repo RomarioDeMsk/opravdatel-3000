@@ -28,15 +28,15 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Активация Service Worker
+// Активация Service Worker (агрессивная очистка кэша)
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
+            // Удаляем ВСЕ старые кэши, включая предыдущие версии
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    // Удаляем ВСЕ старые кэши, включая v1
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
+                        console.log('Удаление старого кэша:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -48,6 +48,13 @@ self.addEventListener('activate', (event) => {
     );
     // Немедленно активируем новый Service Worker
     self.skipWaiting();
+    
+    // Уведомляем все клиенты об обновлении
+    self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+            client.postMessage({ type: 'SW_UPDATED', cacheName: CACHE_NAME });
+        });
+    });
 });
 
 // Перехват запросов (оптимизированная стратегия Cache First с Network Fallback)
