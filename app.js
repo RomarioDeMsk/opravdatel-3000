@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const templatesData = await templatesResponse.json();
 
         // Создаем экземпляры классов
-        const generator = new ExcuseGenerator(excusesData, templatesData);
         const storage = new Storage();
+        const generator = new ExcuseGenerator(excusesData, templatesData, storage);
         const ui = new UI(generator, storage);
 
         // Делаем UI доступным глобально для обработчиков в HTML

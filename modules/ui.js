@@ -10,6 +10,10 @@ export class UI {
     init() {
         this.setupEventListeners();
         this.loadTopExcuses();
+        // Загружаем топ каждые 30 секунд для обновления
+        setInterval(() => {
+            this.loadTopExcuses();
+        }, 30000);
     }
 
     setupEventListeners() {
@@ -46,32 +50,13 @@ export class UI {
             });
         });
 
-        // Кнопки действий
-        document.getElementById('btn-copy').addEventListener('click', () => {
-            this.copyToClipboard();
+        // Кнопки голосования
+        document.getElementById('btn-like').addEventListener('click', () => {
+            this.voteExcuse('like');
         });
 
-        document.getElementById('btn-share').addEventListener('click', () => {
-            this.shareExcuse();
-        });
-
-        document.getElementById('btn-favorite').addEventListener('click', () => {
-            this.saveToFavorite();
-        });
-
-        document.getElementById('btn-collection').addEventListener('click', () => {
-            this.showCollection();
-        });
-
-        // Модальное окно
-        document.getElementById('modal-close').addEventListener('click', () => {
-            this.hideCollection();
-        });
-
-        document.getElementById('collection-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'collection-modal') {
-                this.hideCollection();
-            }
+        document.getElementById('btn-dislike').addEventListener('click', () => {
+            this.voteExcuse('dislike');
         });
 
         // Enter в поле ИИ
@@ -238,14 +223,6 @@ export class UI {
             const actionsDiv = document.createElement('div');
             actionsDiv.className = 'variant-actions';
             
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'variant-btn';
-            copyBtn.innerHTML = '📋 Копировать';
-            copyBtn.addEventListener('click', () => {
-                this.copyVariant(variant.text);
-                this.animateSuccess(copyBtn);
-            });
-            
             const selectBtn = document.createElement('button');
             selectBtn.className = 'variant-btn variant-btn-primary';
             selectBtn.innerHTML = '✓ Выбрать';
@@ -299,13 +276,6 @@ export class UI {
     }
 
     // Копировать вариант
-    async copyVariant(text) {
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (err) {
-            console.error('Failed to copy:', err);
-        }
-    }
 
     // Анимация успеха
     animateSuccess(element) {
@@ -373,14 +343,134 @@ export class UI {
         }
         
         // Анимация печати
-        this.typewriterEffect(terminal, excuse.text);
+        this.typewriterEffect(terminal, excuse.text, () => {
+            // После завершения печати показываем панель голосования
+            this.showVotingPanel();
+        });
         
         // Сохраняем в историю
         this.storage.addToHistory(excuse);
     }
+    
+    // Показать панель голосования
+    showVotingPanel() {
+        const votingPanel = document.getElementById('voting-panel');
+        if (votingPanel && this.currentExcuse) {
+            votingPanel.style.display = 'flex';
+            this.updateVotingCounts();
+        }
+    }
+    
+    // Скрыть панель голосования
+    hideVotingPanel() {
+        const votingPanel = document.getElementById('voting-panel');
+        if (votingPanel) {
+            votingPanel.style.display = 'none';
+        }
+    }
+    
+    // Голосование за отговорку
+    voteExcuse(type) {
+        if (!this.currentExcuse) {
+            return;
+        }
+
+        // Проверяем, не голосовал ли уже пользователь
+        if (this.storage.hasVoted(this.currentExcuse.text)) {
+            return; // Уже проголосовал, блокируем
+        }
+
+        // Анимация swipe как в Tinder
+        const terminal = document.getElementById('terminal');
+        if (terminal) {
+            const direction = type === 'like' ? 'right' : 'left';
+            terminal.classList.add(`swipe-${direction}`);
+            
+            // После анимации обновляем данные
+            setTimeout(() => {
+                if (type === 'like') {
+                    const likes = this.storage.likeExcuse(this.currentExcuse.text);
+                    if (likes !== false) {
+                        const btn = document.getElementById('btn-like');
+                        if (btn) {
+                            btn.classList.add('voted');
+                        }
+                        this.updateVotingCounts();
+                        this.loadTopExcuses();
+                    }
+                } else if (type === 'dislike') {
+                    const dislikes = this.storage.dislikeExcuse(this.currentExcuse.text);
+                    if (dislikes !== false) {
+                        const btn = document.getElementById('btn-dislike');
+                        if (btn) {
+                            btn.classList.add('voted');
+                        }
+                        this.updateVotingCounts();
+                    }
+                }
+                
+                // Убираем класс анимации и скрываем панель голосования
+                terminal.classList.remove(`swipe-${direction}`);
+                this.hideVotingPanel();
+                
+                // Показываем сообщение о следующей отговорке
+                setTimeout(() => {
+                    this.showNextExcuseMessage();
+                }, 300);
+            }, 500);
+        }
+    }
+    
+    // Показать сообщение о следующей отговорке
+    showNextExcuseMessage() {
+        const terminalContent = document.getElementById('terminal-content');
+        if (terminalContent) {
+            terminalContent.innerHTML = '<span class="cursor-blink">Нажмите кнопку для новой отговорки...</span>';
+        }
+    }
+    
+    // Обновить счетчики голосования
+    updateVotingCounts() {
+        if (!this.currentExcuse) return;
+        
+        const likes = this.storage.getLikesCount(this.currentExcuse.text);
+        const dislikes = this.storage.getDislikesCount(this.currentExcuse.text);
+        const voteType = this.storage.getVoteType(this.currentExcuse.text);
+        
+        const likeCountEl = document.getElementById('like-count');
+        const dislikeCountEl = document.getElementById('dislike-count');
+        
+        if (likeCountEl) {
+            likeCountEl.textContent = likes;
+            likeCountEl.style.display = likes > 0 ? 'inline-block' : 'none';
+        }
+        
+        if (dislikeCountEl) {
+            dislikeCountEl.textContent = dislikes;
+            dislikeCountEl.style.display = dislikes > 0 ? 'inline-block' : 'none';
+        }
+        
+        // Обновляем состояние кнопок
+        const likeBtn = document.getElementById('btn-like');
+        const dislikeBtn = document.getElementById('btn-dislike');
+        
+        // Блокируем кнопки, если уже проголосовали
+        if (this.storage.hasVoted(this.currentExcuse.text)) {
+            if (voteType === 'like') {
+                likeBtn?.classList.add('voted', 'disabled');
+                dislikeBtn?.classList.add('disabled');
+            } else if (voteType === 'dislike') {
+                dislikeBtn?.classList.add('voted', 'disabled');
+                likeBtn?.classList.add('disabled');
+            }
+        } else {
+            likeBtn?.classList.remove('voted', 'disabled');
+            dislikeBtn?.classList.remove('voted', 'disabled');
+        }
+    }
 
     // Эффект печатной машинки
-    typewriterEffect(element, text) {
+    typewriterEffect(element, text, onComplete) {
         element.textContent = '';
         element.classList.add('typewriter');
         
@@ -395,6 +485,9 @@ export class UI {
             } else {
                 element.classList.remove('typewriter');
                 element.innerHTML = text + '<span class="cursor-blink">_</span>';
+                if (onComplete) {
+                    onComplete();
+                }
             }
         };
         
@@ -451,121 +544,6 @@ export class UI {
     }
 
     // Поделиться
-    async shareExcuse() {
-        if (!this.currentExcuse) {
-            return;
-        }
-
-        const shareData = {
-            title: 'Оправдатель 3000',
-            text: this.currentExcuse.text,
-            url: window.location.href
-        };
-
-        try {
-            if (navigator.share) {
-                await navigator.share(shareData);
-            } else {
-                // Fallback: копируем в буфер
-                await this.copyToClipboard();
-            }
-        } catch (err) {
-            if (err.name !== 'AbortError') {
-                console.error('Share failed:', err);
-            }
-        }
-    }
-
-    // Сохранить в избранное
-    saveToFavorite() {
-        if (!this.currentExcuse) {
-            return;
-        }
-
-        const saved = this.storage.saveToCollection(this.currentExcuse);
-        
-        if (saved) {
-            // Визуальная обратная связь с анимацией
-            const btn = document.getElementById('btn-favorite');
-            const icon = btn.querySelector('.action-icon');
-            btn.classList.add('success-pulse');
-            icon.textContent = '⭐';
-            icon.style.transform = 'scale(1.5) rotate(360deg)';
-            
-            // Эффект конфетти
-            this.createConfetti();
-            
-            setTimeout(() => {
-                icon.style.transform = '';
-                btn.classList.remove('success-pulse');
-            }, 600);
-        }
-    }
-
-    // Показать коллекцию
-    showCollection() {
-        const modal = document.getElementById('collection-modal');
-        const list = document.getElementById('collection-list');
-        
-        const collection = this.storage.getCollection();
-        
-        if (collection.length === 0) {
-            list.innerHTML = '<p class="empty-message">Коллекция пуста. Сохраните понравившиеся отговорки!</p>';
-        } else {
-            list.innerHTML = '';
-            collection.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'collection-item';
-                
-                const textDiv = document.createElement('div');
-                textDiv.className = 'collection-item-text';
-                textDiv.textContent = item.text;
-                
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'collection-item-actions';
-                
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'collection-item-btn';
-                copyBtn.textContent = 'Копировать';
-                copyBtn.addEventListener('click', () => this.copyCollectionItem(item.text));
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'collection-item-btn';
-                deleteBtn.textContent = 'Удалить';
-                deleteBtn.addEventListener('click', () => this.removeCollectionItem(item.id));
-                
-                actionsDiv.appendChild(copyBtn);
-                actionsDiv.appendChild(deleteBtn);
-                
-                itemDiv.appendChild(textDiv);
-                itemDiv.appendChild(actionsDiv);
-                
-                list.appendChild(itemDiv);
-            });
-        }
-        
-        modal.style.display = 'flex';
-    }
-
-    // Скрыть коллекцию
-    hideCollection() {
-        document.getElementById('collection-modal').style.display = 'none';
-    }
-
-    // Удалить из коллекции
-    removeCollectionItem(id) {
-        this.storage.removeFromCollection(id);
-        this.showCollection(); // Обновляем список
-    }
-
-    // Копировать элемент коллекции
-    async copyCollectionItem(text) {
-        try {
-            await navigator.clipboard.writeText(text);
-        } catch (err) {
-            console.error('Failed to copy:', err);
-        }
-    }
 
     // Загрузить топ отговорок
     loadTopExcuses() {

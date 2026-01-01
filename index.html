@@ -95,6 +95,20 @@
                         <span class="cursor-blink">_</span>
                     </div>
                     <div class="excuse-display-glow"></div>
+                    <!-- Система голосования -->
+                    <div class="voting-panel" id="voting-panel" style="display: none;">
+                        <div class="voting-label">Оцените отговорку:</div>
+                        <div class="voting-buttons">
+                            <button class="vote-btn vote-like" id="btn-like" title="Понравилось">
+                                <span class="vote-icon">👍</span>
+                                <span class="vote-count" id="like-count">0</span>
+                            </button>
+                            <button class="vote-btn vote-dislike" id="btn-dislike" title="Не понравилось">
+                                <span class="vote-icon">👎</span>
+                                <span class="vote-count" id="dislike-count">0</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Контейнер для 3 вариантов (скрыт по умолчанию) -->
@@ -106,25 +120,6 @@
                 </div>
             </div>
 
-            <!-- Панель действий -->
-            <div class="action-panel">
-                <button class="action-btn" id="btn-copy" title="Копировать">
-                    <span class="action-icon">📋</span>
-                    <span class="action-text">Копировать</span>
-                </button>
-                <button class="action-btn" id="btn-share" title="Поделиться">
-                    <span class="action-icon">📤</span>
-                    <span class="action-text">Поделиться</span>
-                </button>
-                <button class="action-btn" id="btn-favorite" title="В избранное">
-                    <span class="action-icon">⭐</span>
-                    <span class="action-text">В избранное</span>
-                </button>
-                <button class="action-btn" id="btn-collection" title="Моя коллекция">
-                    <span class="action-icon">📚</span>
-                    <span class="action-text">Коллекция</span>
-                </button>
-            </div>
 
             <!-- Топ отговорок -->
             <div class="top-excuses">
@@ -135,18 +130,6 @@
             </div>
         </main>
 
-        <!-- Модальное окно коллекции -->
-        <div class="modal" id="collection-modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Моя коллекция</h2>
-                    <button class="modal-close" id="modal-close">&times;</button>
-                </div>
-                <div class="modal-body" id="collection-list">
-                    <p class="empty-message">Коллекция пуста. Сохраните понравившиеся отговорки!</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Футер -->
         <footer class="footer">
