@@ -2,6 +2,10 @@
 import { ExcuseGenerator } from './modules/generator.js';
 import { Storage } from './modules/storage.js';
 import { UI } from './modules/ui.js';
+import { APP_VERSION } from './version.js';
+
+// Сохраняем версию для Service Worker
+window.APP_VERSION = APP_VERSION;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', async () => {

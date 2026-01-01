@@ -1,5 +1,8 @@
 // Service Worker для PWA
-const CACHE_NAME = 'opravdatel3000-v3';
+// Версия обновляется вручную при каждом деплое
+// Для автоматического обновления кэша измените версию ниже
+const APP_VERSION = '3.2.0';
+const CACHE_NAME = `opravdatel3000-${APP_VERSION}`;
 const urlsToCache = [
     './',
     './index.html',

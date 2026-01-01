@@ -938,6 +938,13 @@ body::after {
     gap: var(--spacing-md);
     max-height: 400px;
     overflow-y: auto;
+    /* Скрываем scrollbar, но оставляем прокрутку */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE и Edge */
+}
+
+.favorites-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .favorite-item {
@@ -964,6 +971,9 @@ body::after {
     color: var(--text-primary);
     line-height: 1.6;
     font-size: 0.95rem;
+    min-width: 0; /* Позволяет тексту сжиматься */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .favorite-actions {
