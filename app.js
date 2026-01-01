@@ -81,24 +81,23 @@ if ('serviceWorker' in navigator) {
             }
         }
         
-        // Регистрируем/обновляем Service Worker (всегда, независимо от версии)
+        // Регистрируем Service Worker (только один раз, без постоянных обновлений)
         navigator.serviceWorker.register('./sw.js', {
             updateViaCache: 'none'
         }).then((reg) => {
-            console.log(`Service Worker v${currentVersion} активен`);
+            console.log(`Service Worker v${currentVersion} зарегистрирован`);
             
-            // Проверяем обновления в фоне
-            reg.update();
+            // НЕ вызываем reg.update() сразу - это может вызывать постоянные обновления
+            // Обновления будут происходить естественным образом при следующем визите
             
-            // Слушаем обновления Service Worker
+            // Слушаем обновления Service Worker (только для логирования)
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
                 if (newWorker) {
                     newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Новый Service Worker установлен, но не активирован
-                            console.log('Доступна новая версия Service Worker');
-                            // НЕ перезагружаем автоматически - пользователь может сделать это сам
+                        if (newWorker.state === 'installed') {
+                            console.log('Новая версия Service Worker установлена');
+                            // НЕ перезагружаем автоматически
                         }
                     });
                 }
