@@ -34,15 +34,20 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
+                    // Удаляем ВСЕ старые кэши, включая v1
                     if (cacheName !== CACHE_NAME) {
                         console.log('Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
+        }).then(() => {
+            // Принудительно активируем новый Service Worker
+            return self.clients.claim();
         })
     );
-    return self.clients.claim();
+    // Немедленно активируем новый Service Worker
+    self.skipWaiting();
 });
 
 // Перехват запросов

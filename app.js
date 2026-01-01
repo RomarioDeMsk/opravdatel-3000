@@ -45,3 +45,27 @@ window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
 });
 
+// Принудительное обновление Service Worker при загрузке
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => {
+                // Удаляем старые регистрации
+                registration.unregister().then(() => {
+                    console.log('Old Service Worker unregistered');
+                    // Регистрируем новый
+                    navigator.serviceWorker.register('./sw.js')
+                        .then((reg) => {
+                            console.log('New Service Worker registered:', reg.scope);
+                            // Принудительно обновляем
+                            reg.update();
+                        })
+                        .catch((err) => {
+                            console.error('Service Worker registration failed:', err);
+                        });
+                });
+            });
+        });
+    });
+}
+
