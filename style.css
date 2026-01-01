@@ -1616,7 +1616,11 @@ body::after {
     }
     
     .control-panel {
-        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+    
+    .control-panel .btn {
+        max-width: 100%;
     }
     
     .chamey {
