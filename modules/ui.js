@@ -18,21 +18,33 @@ export class UI {
 
     setupEventListeners() {
         // Кнопки генерации
-        document.getElementById('btn-random').addEventListener('click', () => {
-            this.generateRandom();
-        });
+        const btnRandom = document.getElementById('btn-random');
+        if (btnRandom) {
+            btnRandom.addEventListener('click', () => {
+                this.generateRandom();
+            });
+        }
 
-        document.getElementById('btn-category').addEventListener('click', () => {
-            this.toggleCategorySelector();
-        });
+        const btnCategory = document.getElementById('btn-category');
+        if (btnCategory) {
+            btnCategory.addEventListener('click', () => {
+                this.toggleCategorySelector();
+            });
+        }
 
-        document.getElementById('btn-absurd').addEventListener('click', () => {
-            this.generateAbsurd();
-        });
+        const btnAbsurd = document.getElementById('btn-absurd');
+        if (btnAbsurd) {
+            btnAbsurd.addEventListener('click', () => {
+                this.generateAbsurd();
+            });
+        }
 
-        document.getElementById('btn-ai').addEventListener('click', () => {
-            this.toggleAIAssistant();
-        });
+        const btnAI = document.getElementById('btn-ai');
+        if (btnAI) {
+            btnAI.addEventListener('click', () => {
+                this.toggleAIAssistant();
+            });
+        }
 
         const aiGenerateBtn = document.getElementById('btn-ai-generate');
         if (aiGenerateBtn) {
@@ -45,31 +57,48 @@ export class UI {
         document.querySelectorAll('.category-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const category = e.target.dataset.category;
-                this.generateByCategory(category);
-                this.toggleCategorySelector();
+                if (category) {
+                    this.generateByCategory(category);
+                    this.toggleCategorySelector();
+                }
             });
         });
 
         // Кнопки голосования
-        document.getElementById('btn-like').addEventListener('click', () => {
-            this.voteExcuse('like');
-        });
+        const btnLike = document.getElementById('btn-like');
+        if (btnLike) {
+            btnLike.addEventListener('click', () => {
+                this.voteExcuse('like');
+            });
+        }
 
-        document.getElementById('btn-dislike').addEventListener('click', () => {
-            this.voteExcuse('dislike');
-        });
+        const btnDislike = document.getElementById('btn-dislike');
+        if (btnDislike) {
+            btnDislike.addEventListener('click', () => {
+                this.voteExcuse('dislike');
+            });
+        }
 
-        document.getElementById('btn-super-like').addEventListener('click', () => {
-            this.superLikeExcuse();
-        });
+        const btnSuperLike = document.getElementById('btn-super-like');
+        if (btnSuperLike) {
+            btnSuperLike.addEventListener('click', () => {
+                this.superLikeExcuse();
+            });
+        }
 
-        document.getElementById('btn-close-favorites').addEventListener('click', () => {
-            this.hideFavorites();
-        });
+        const btnCloseFavorites = document.getElementById('btn-close-favorites');
+        if (btnCloseFavorites) {
+            btnCloseFavorites.addEventListener('click', () => {
+                this.hideFavorites();
+            });
+        }
 
-        document.getElementById('btn-favorites').addEventListener('click', () => {
-            this.toggleFavorites();
-        });
+        const btnFavorites = document.getElementById('btn-favorites');
+        if (btnFavorites) {
+            btnFavorites.addEventListener('click', () => {
+                this.toggleFavorites();
+            });
+        }
 
         // Enter в поле ИИ
         const aiInput = document.getElementById('ai-input');
@@ -580,13 +609,22 @@ export class UI {
             
             favoritesList.innerHTML = sortedFavorites.map(item => {
                 // Экранируем HTML для безопасности
-                const text = String(item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                const safeText = text.replace(/"/g, '&quot;');
+                const originalText = String(item.text || '');
+                const safeText = originalText
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+                
+                // Для data-атрибута используем двойное экранирование кавычек
+                const dataText = safeText.replace(/"/g, '&quot;');
+                
                 return `
                 <div class="favorite-item">
-                    <div class="favorite-text">${text}</div>
+                    <div class="favorite-text">${safeText}</div>
                     <div class="favorite-actions">
-                        <button class="favorite-btn favorite-copy" data-text="${safeText}" title="Копировать">📋</button>
+                        <button class="favorite-btn favorite-copy" data-text="${dataText}" title="Копировать">📋</button>
                         <button class="favorite-btn favorite-remove" data-id="${item.id}" title="Удалить">🗑️</button>
                     </div>
                 </div>
@@ -596,18 +634,27 @@ export class UI {
             // Добавляем обработчики событий
             favoritesList.querySelectorAll('.favorite-copy').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const text = e.target.dataset.text || e.target.closest('.favorite-copy')?.dataset.text;
+                    e.stopPropagation();
+                    const target = e.target.closest('.favorite-copy') || e.target;
+                    const text = target.dataset.text;
                     if (text) {
                         // Декодируем HTML-сущности обратно
-                        const decodedText = text.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                        this.copyToClipboard(decodedText);
+                        const decodedText = text
+                            .replace(/&quot;/g, '"')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&amp;/g, '&')
+                            .replace(/&#39;/g, "'");
+                        this.copyToClipboard(decodedText, target);
                     }
                 });
             });
             
             favoritesList.querySelectorAll('.favorite-remove').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const id = e.target.dataset.id || e.target.closest('.favorite-remove')?.dataset.id;
+                    e.stopPropagation();
+                    const target = e.target.closest('.favorite-remove') || e.target;
+                    const id = target.dataset.id;
                     if (id) {
                         this.removeFavorite(parseInt(id));
                     }
@@ -623,19 +670,36 @@ export class UI {
     }
     
     // Копировать в буфер обмена
-    async copyToClipboard(text) {
+    async copyToClipboard(text, buttonElement = null) {
+        if (!text) {
+            console.error('Попытка скопировать пустой текст');
+            return;
+        }
+        
         try {
             await navigator.clipboard.writeText(text);
             // Визуальная обратная связь
-            const btn = event?.target;
-            if (btn) {
-                btn.style.transform = 'scale(1.2)';
+            if (buttonElement) {
+                buttonElement.style.transform = 'scale(1.2)';
                 setTimeout(() => {
-                    btn.style.transform = '';
+                    buttonElement.style.transform = '';
                 }, 200);
             }
         } catch (err) {
             console.error('Failed to copy:', err);
+            // Fallback для старых браузеров
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch (fallbackErr) {
+                console.error('Fallback copy also failed:', fallbackErr);
+            }
         }
     }
     
