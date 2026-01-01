@@ -479,12 +479,19 @@ export class UI {
         
         const type = () => {
             if (index < text.length) {
-                element.textContent += text.charAt(index);
+                // Добавляем символ постепенно
+                element.textContent = text.substring(0, index + 1);
                 index++;
                 setTimeout(type, speed);
             } else {
+                // Анимация завершена - добавляем курсор плавно
                 element.classList.remove('typewriter');
-                element.innerHTML = text + '<span class="cursor-blink">_</span>';
+                // Используем textContent для текста и добавляем курсор отдельно
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor-blink';
+                cursor.textContent = '_';
+                element.appendChild(cursor);
+                
                 if (onComplete) {
                     onComplete();
                 }
