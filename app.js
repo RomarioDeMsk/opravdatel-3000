@@ -49,62 +49,17 @@ window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
 });
 
-// Оптимизированная регистрация Service Worker с проверкой версии
+// Простая регистрация Service Worker без автоматических обновлений
 if ('serviceWorker' in navigator) {
-    const currentVersion = window.APP_VERSION || '3.3.0';
-    const versionKey = 'opravdatel3000_version';
-    
-    // Проверяем, изменилась ли версия
-    const storedVersion = localStorage.getItem(versionKey);
-    
     window.addEventListener('load', () => {
-        // Если версия изменилась - обновляем кэш
-        if (storedVersion !== currentVersion) {
-            console.log(`Обнаружена новая версия: ${currentVersion} (было: ${storedVersion || 'нет'})`);
-            
-            // Очищаем старые кэши только при смене версии
-            if ('caches' in window) {
-                caches.keys().then((cacheNames) => {
-                    return Promise.all(
-                        cacheNames.map((cacheName) => {
-                            if (!cacheName.includes(currentVersion)) {
-                                console.log('Удаление старого кэша:', cacheName);
-                                return caches.delete(cacheName);
-                            }
-                        })
-                    );
-                }).then(() => {
-                    // Сохраняем новую версию
-                    localStorage.setItem(versionKey, currentVersion);
-                    console.log('Кэш обновлен для версии:', currentVersion);
-                });
-            }
-        }
-        
-        // Регистрируем Service Worker (только один раз, без постоянных обновлений)
-        navigator.serviceWorker.register('./sw.js', {
-            updateViaCache: 'none'
-        }).then((reg) => {
-            console.log(`Service Worker v${currentVersion} зарегистрирован`);
-            
-            // НЕ вызываем reg.update() сразу - это может вызывать постоянные обновления
-            // Обновления будут происходить естественным образом при следующем визите
-            
-            // Слушаем обновления Service Worker (только для логирования)
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                if (newWorker) {
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed') {
-                            console.log('Новая версия Service Worker установлена');
-                            // НЕ перезагружаем автоматически
-                        }
-                    });
-                }
+        // Регистрируем Service Worker один раз
+        navigator.serviceWorker.register('./sw.js')
+            .then((reg) => {
+                console.log('Service Worker зарегистрирован');
+            })
+            .catch((err) => {
+                console.error('Ошибка регистрации Service Worker:', err);
             });
-        }).catch((err) => {
-            console.error('Ошибка регистрации Service Worker:', err);
-        });
     });
 }
 
