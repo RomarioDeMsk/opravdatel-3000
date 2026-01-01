@@ -4,6 +4,7 @@ export class UI {
         this.generator = generator;
         this.storage = storage;
         this.currentExcuse = null;
+        this.lastExcuseType = null; // 'serious', 'funny', 'absurd' - для чередования типов
         this.init();
     }
 
@@ -423,6 +424,17 @@ export class UI {
         this.hideVariants();
         
         this.currentExcuse = excuse;
+        
+        // Определяем тип текущей отговорки для чередования
+        if (excuse.isAbsurd) {
+            this.lastExcuseType = 'absurd';
+        } else {
+            // Определяем по тексту: если есть юмор - funny, иначе - serious
+            const funnyKeywords = ['кот', 'аллергия', 'случайно', 'объявил', 'требует', 'решил', 'начал', 'попал'];
+            const isFunny = funnyKeywords.some(keyword => excuse.text.toLowerCase().includes(keyword));
+            this.lastExcuseType = isFunny ? 'funny' : 'serious';
+        }
+        
         const terminal = document.getElementById('terminal-content');
         
         // Показываем терминал если он был скрыт
@@ -616,9 +628,9 @@ export class UI {
                 terminal.classList.remove('super-like-animation');
                 this.hideVotingPanel();
                 
-                // Показываем сообщение о следующей отговорке
+                // Генерируем новую отговорку той же категории с чередованием типов
                 setTimeout(() => {
-                    this.showNextExcuseMessage();
+                    this.generateNextExcuse();
                 }, 300);
             }, 800);
         }
