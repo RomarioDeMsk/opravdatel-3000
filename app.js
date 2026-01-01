@@ -4,7 +4,7 @@ import { Storage } from './modules/storage.js';
 import { UI } from './modules/ui.js';
 import { APP_VERSION } from './version.js';
 
-// Сохраняем версию для Service Worker
+// Сохраняем версию глобально
 window.APP_VERSION = APP_VERSION;
 
 // Инициализация приложения
