@@ -560,33 +560,57 @@ export class UI {
     // Загрузить избранные отговорки
     loadFavorites() {
         const favoritesList = document.getElementById('favorites-list');
-        if (!favoritesList) return;
+        if (!favoritesList) {
+            console.error('favorites-list элемент не найден');
+            return;
+        }
         
         const favorites = this.storage.getCollection();
+        console.log('Загрузка избранного. Найдено элементов:', favorites.length);
         
         if (favorites.length === 0) {
             favoritesList.innerHTML = '<div class="empty-message">У вас пока нет избранных отговорок. Используйте ⭐ для добавления!</div>';
         } else {
-            favoritesList.innerHTML = favorites.map(item => `
+            // Сортируем по дате (новые сверху)
+            const sortedFavorites = [...favorites].sort((a, b) => {
+                const dateA = new Date(a.date || a.id || 0);
+                const dateB = new Date(b.date || b.id || 0);
+                return dateB - dateA;
+            });
+            
+            favoritesList.innerHTML = sortedFavorites.map(item => {
+                // Экранируем HTML для безопасности
+                const text = String(item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                const safeText = text.replace(/"/g, '&quot;');
+                return `
                 <div class="favorite-item">
-                    <div class="favorite-text">${item.text}</div>
+                    <div class="favorite-text">${text}</div>
                     <div class="favorite-actions">
-                        <button class="favorite-btn favorite-copy" data-text="${item.text}" title="Копировать">📋</button>
+                        <button class="favorite-btn favorite-copy" data-text="${safeText}" title="Копировать">📋</button>
                         <button class="favorite-btn favorite-remove" data-id="${item.id}" title="Удалить">🗑️</button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
             
             // Добавляем обработчики событий
             favoritesList.querySelectorAll('.favorite-copy').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    this.copyToClipboard(e.target.dataset.text);
+                    const text = e.target.dataset.text || e.target.closest('.favorite-copy')?.dataset.text;
+                    if (text) {
+                        // Декодируем HTML-сущности обратно
+                        const decodedText = text.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                        this.copyToClipboard(decodedText);
+                    }
                 });
             });
             
             favoritesList.querySelectorAll('.favorite-remove').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    this.removeFavorite(parseInt(e.target.dataset.id));
+                    const id = e.target.dataset.id || e.target.closest('.favorite-remove')?.dataset.id;
+                    if (id) {
+                        this.removeFavorite(parseInt(id));
+                    }
                 });
             });
         }
