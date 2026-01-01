@@ -17,8 +17,12 @@ export class ExcuseGenerator {
         let attempt = 0;
         let excuse = null;
         
-        // 80% вероятность использовать шаблоны, 20% - готовые отговорки
-        const useTemplates = Math.random() > 0.2 && this.patterns && Object.keys(this.patterns).length > 0;
+        // Проверяем, есть ли шаблоны для использования
+        const hasTemplates = this.patterns && Object.keys(this.patterns).length > 0 && 
+                            Object.values(this.patterns).some(patterns => patterns && patterns.length > 0);
+        
+        // Используем шаблоны только если они есть, иначе всегда используем готовые отговорки
+        const useTemplates = hasTemplates && Math.random() > 0.2;
         
         while (attempt < maxAttempts) {
             if (useTemplates) {
@@ -30,8 +34,19 @@ export class ExcuseGenerator {
                     filtered = this.excuses.filter(e => e.category === category);
                 }
                 
+                // Если нет отговорок в категории, пробуем все
                 if (filtered.length === 0) {
-                    excuse = this.generateFromTemplates(category);
+                    filtered = this.excuses;
+                }
+                
+                if (filtered.length === 0) {
+                    // Если вообще нет отговорок, возвращаем заглушку
+                    return {
+                        text: "К сожалению, база отговорок пуста. Попробуйте позже.",
+                        category: 'universal',
+                        isAbsurd: false,
+                        id: 'empty'
+                    };
                 } else {
                     // Исключаем недавно использованные
                     const available = filtered.filter(e => !this.recentExcuses.has(e.text));
@@ -42,7 +57,7 @@ export class ExcuseGenerator {
             }
             
             // Проверяем, не использовалась ли эта отговорка недавно
-            if (excuse && !this.recentExcuses.has(excuse.text)) {
+            if (excuse && excuse.text && !this.recentExcuses.has(excuse.text)) {
                 this.addToRecent(excuse.text);
                 return excuse;
             }
@@ -52,13 +67,40 @@ export class ExcuseGenerator {
         
         // Если не удалось найти уникальную, возвращаем любую
         if (!excuse) {
-            excuse = useTemplates 
-                ? this.generateFromTemplates(category)
-                : this.excuses[Math.floor(Math.random() * this.excuses.length)];
+            if (useTemplates && hasTemplates) {
+                excuse = this.generateFromTemplates(category);
+            } else {
+                const filtered = category !== 'all' 
+                    ? this.excuses.filter(e => e.category === category)
+                    : this.excuses;
+                
+                if (filtered.length > 0) {
+                    excuse = filtered[Math.floor(Math.random() * filtered.length)];
+                } else if (this.excuses.length > 0) {
+                    excuse = this.excuses[Math.floor(Math.random() * this.excuses.length)];
+                } else {
+                    return {
+                        text: "К сожалению, база отговорок пуста. Попробуйте позже.",
+                        category: 'universal',
+                        isAbsurd: false,
+                        id: 'empty'
+                    };
+                }
+            }
         }
         
-        this.addToRecent(excuse.text);
-        return excuse;
+        if (excuse && excuse.text) {
+            this.addToRecent(excuse.text);
+            return excuse;
+        }
+        
+        // Финальная заглушка
+        return {
+            text: "Ошибка генерации. Попробуйте еще раз.",
+            category: 'universal',
+            isAbsurd: false,
+            id: 'error'
+        };
     }
     
     // Добавить в список недавних
