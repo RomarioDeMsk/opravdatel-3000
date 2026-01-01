@@ -12,49 +12,39 @@ export class ExcuseGenerator {
         this.usedCombinations = new Set(); // Использованные комбинации шаблонов
     }
 
-    // Генерация случайной отговорки
+    // Генерация случайной отговорки (всегда используем готовые отговорки)
     generateRandom(category = 'all', maxAttempts = 10) {
         let attempt = 0;
         let excuse = null;
         
-        // Проверяем, есть ли шаблоны для использования
-        const hasTemplates = this.patterns && Object.keys(this.patterns).length > 0 && 
-                            Object.values(this.patterns).some(patterns => patterns && patterns.length > 0);
-        
-        // Используем шаблоны только если они есть, иначе всегда используем готовые отговорки
-        const useTemplates = hasTemplates && Math.random() > 0.2;
-        
+        // Всегда используем готовые отговорки, не шаблоны
         while (attempt < maxAttempts) {
-            if (useTemplates) {
-                excuse = this.generateFromTemplates(category);
-            } else {
-                let filtered = this.excuses;
-                
-                if (category !== 'all') {
-                    filtered = this.excuses.filter(e => e.category === category);
-                }
-                
-                // Если нет отговорок в категории, пробуем все
-                if (filtered.length === 0) {
-                    filtered = this.excuses;
-                }
-                
-                if (filtered.length === 0) {
-                    // Если вообще нет отговорок, возвращаем заглушку
-                    return {
-                        text: "К сожалению, база отговорок пуста. Попробуйте позже.",
-                        category: 'universal',
-                        isAbsurd: false,
-                        id: 'empty'
-                    };
-                } else {
-                    // Исключаем недавно использованные
-                    const available = filtered.filter(e => !this.recentExcuses.has(e.text));
-                    const source = available.length > 0 ? available : filtered;
-                    const randomIndex = Math.floor(Math.random() * source.length);
-                    excuse = source[randomIndex];
-                }
+            let filtered = this.excuses;
+            
+            if (category !== 'all') {
+                filtered = this.excuses.filter(e => e.category === category);
             }
+            
+            // Если нет отговорок в категории, пробуем все
+            if (filtered.length === 0) {
+                filtered = this.excuses;
+            }
+            
+            if (filtered.length === 0) {
+                // Если вообще нет отговорок, возвращаем заглушку
+                return {
+                    text: "К сожалению, база отговорок пуста. Попробуйте позже.",
+                    category: 'universal',
+                    isAbsurd: false,
+                    id: 'empty'
+                };
+            }
+            
+            // Исключаем недавно использованные
+            const available = filtered.filter(e => !this.recentExcuses.has(e.text));
+            const source = available.length > 0 ? available : filtered;
+            const randomIndex = Math.floor(Math.random() * source.length);
+            excuse = source[randomIndex];
             
             // Проверяем, не использовалась ли эта отговорка недавно
             if (excuse && excuse.text && !this.recentExcuses.has(excuse.text)) {
@@ -67,25 +57,21 @@ export class ExcuseGenerator {
         
         // Если не удалось найти уникальную, возвращаем любую
         if (!excuse) {
-            if (useTemplates && hasTemplates) {
-                excuse = this.generateFromTemplates(category);
+            const filtered = category !== 'all' 
+                ? this.excuses.filter(e => e.category === category)
+                : this.excuses;
+            
+            if (filtered.length > 0) {
+                excuse = filtered[Math.floor(Math.random() * filtered.length)];
+            } else if (this.excuses.length > 0) {
+                excuse = this.excuses[Math.floor(Math.random() * this.excuses.length)];
             } else {
-                const filtered = category !== 'all' 
-                    ? this.excuses.filter(e => e.category === category)
-                    : this.excuses;
-                
-                if (filtered.length > 0) {
-                    excuse = filtered[Math.floor(Math.random() * filtered.length)];
-                } else if (this.excuses.length > 0) {
-                    excuse = this.excuses[Math.floor(Math.random() * this.excuses.length)];
-                } else {
-                    return {
-                        text: "К сожалению, база отговорок пуста. Попробуйте позже.",
-                        category: 'universal',
-                        isAbsurd: false,
-                        id: 'empty'
-                    };
-                }
+                return {
+                    text: "К сожалению, база отговорок пуста. Попробуйте позже.",
+                    category: 'universal',
+                    isAbsurd: false,
+                    id: 'empty'
+                };
             }
         }
         
