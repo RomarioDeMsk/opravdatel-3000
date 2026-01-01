@@ -505,13 +505,21 @@ export class UI {
                     this.loadTopExcuses();
                     
                     // Обновляем список избранного и показываем раздел
+                    console.log('Супер лайк: сохранено в избранное:', saved);
                     this.loadFavorites();
                     const favoritesSection = document.getElementById('favorites-section');
                     if (favoritesSection) {
                         // Всегда показываем раздел избранного после супер лайка
                         this.showFavorites();
-                        console.log('Избранное обновлено. Количество:', this.storage.getCollection().length);
+                        const collection = this.storage.getCollection();
+                        console.log('Избранное обновлено. Количество:', collection.length);
+                        console.log('Элементы избранного:', collection);
+                    } else {
+                        console.error('Элемент favorites-section не найден');
                     }
+                } else {
+                    console.warn('Не удалось лайкнуть отговорку (возможно, уже проголосовано)');
+                }
                 }
                 
                 // Убираем класс анимации и скрываем панель голосования
