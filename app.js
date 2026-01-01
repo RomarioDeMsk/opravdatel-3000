@@ -45,41 +45,44 @@ window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
 });
 
-// Оптимизированная регистрация Service Worker
+// Оптимизированная регистрация Service Worker с принудительным обновлением
 if ('serviceWorker' in navigator) {
-    // Используем requestIdleCallback для неблокирующей регистрации
-    const registerSW = () => {
+    // Принудительное обновление Service Worker при загрузке
+    window.addEventListener('load', () => {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
-            // Удаляем старые регистрации только если есть новые версии
-            Promise.all(registrations.map(reg => {
-                return reg.update().then(() => {
-                    // Проверяем, нужна ли новая версия
-                    if (reg.active && reg.active.scriptURL.includes('sw.js')) {
-                        return reg.unregister();
-                    }
-                });
-            })).then(() => {
+            // Удаляем все старые регистрации для принудительного обновления
+            Promise.all(registrations.map(reg => reg.unregister())).then(() => {
+                console.log('Старые Service Worker удалены');
+                
                 // Регистрируем новый Service Worker
                 return navigator.serviceWorker.register('./sw.js', {
                     updateViaCache: 'none' // Всегда проверяем обновления
                 });
             }).then((reg) => {
-                console.log('Service Worker registered:', reg.scope);
-                // Периодически проверяем обновления
-                setInterval(() => {
-                    reg.update();
-                }, 60000); // Каждую минуту
+                console.log('Service Worker зарегистрирован:', reg.scope);
+                
+                // Принудительно обновляем
+                reg.update();
+                
+                // Очищаем все кэши
+                if ('caches' in window) {
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                console.log('Удаление кэша:', cacheName);
+                                return caches.delete(cacheName);
+                            })
+                        );
+                    }).then(() => {
+                        console.log('Все кэши очищены');
+                        // Перезагружаем страницу для применения изменений
+                        window.location.reload();
+                    });
+                }
             }).catch((err) => {
-                console.error('Service Worker registration failed:', err);
+                console.error('Ошибка регистрации Service Worker:', err);
             });
         });
-    };
-    
-    // Регистрируем после загрузки страницы, но не блокируя рендеринг
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(registerSW, { timeout: 2000 });
-    } else {
-        window.addEventListener('load', registerSW);
-    }
+    });
 }
 
