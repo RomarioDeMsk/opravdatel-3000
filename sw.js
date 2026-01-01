@@ -28,7 +28,8 @@ self.addEventListener('install', (event) => {
                 console.error('Cache addAll failed:', error);
             })
     );
-    self.skipWaiting();
+    // НЕ используем skipWaiting - это предотвращает постоянные перезагрузки страницы
+    // Service Worker активируется естественным образом при следующем визите
 });
 
 // Активация Service Worker (без агрессивных действий)
