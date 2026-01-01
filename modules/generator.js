@@ -140,10 +140,22 @@ export class ExcuseGenerator {
         };
     }
     
-    // Получить ключ комбинации для отслеживания
+    // Получить ключ комбинации для отслеживания (оптимизировано)
     getCombinationKey(pattern, category) {
-        // Создаем уникальный ключ на основе паттерна и категории
-        return `${category}_${pattern.substring(0, 20)}_${Date.now() % 10000}`;
+        // Используем хэш для экономии памяти
+        const patternHash = this.simpleHash(pattern.substring(0, 50));
+        return `${category}_${patternHash}`;
+    }
+    
+    // Простая хэш-функция для оптимизации
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash).toString(36);
     }
 
     // Заполнение шаблона

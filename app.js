@@ -45,27 +45,41 @@ window.addEventListener('error', (event) => {
     console.error('Global error:', event.error);
 });
 
-// Принудительное обновление Service Worker при загрузке
+// Оптимизированная регистрация Service Worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    // Используем requestIdleCallback для неблокирующей регистрации
+    const registerSW = () => {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
-            registrations.forEach((registration) => {
-                // Удаляем старые регистрации
-                registration.unregister().then(() => {
-                    console.log('Old Service Worker unregistered');
-                    // Регистрируем новый
-                    navigator.serviceWorker.register('./sw.js')
-                        .then((reg) => {
-                            console.log('New Service Worker registered:', reg.scope);
-                            // Принудительно обновляем
-                            reg.update();
-                        })
-                        .catch((err) => {
-                            console.error('Service Worker registration failed:', err);
-                        });
+            // Удаляем старые регистрации только если есть новые версии
+            Promise.all(registrations.map(reg => {
+                return reg.update().then(() => {
+                    // Проверяем, нужна ли новая версия
+                    if (reg.active && reg.active.scriptURL.includes('sw.js')) {
+                        return reg.unregister();
+                    }
                 });
+            })).then(() => {
+                // Регистрируем новый Service Worker
+                return navigator.serviceWorker.register('./sw.js', {
+                    updateViaCache: 'none' // Всегда проверяем обновления
+                });
+            }).then((reg) => {
+                console.log('Service Worker registered:', reg.scope);
+                // Периодически проверяем обновления
+                setInterval(() => {
+                    reg.update();
+                }, 60000); // Каждую минуту
+            }).catch((err) => {
+                console.error('Service Worker registration failed:', err);
             });
         });
-    });
+    };
+    
+    // Регистрируем после загрузки страницы, но не блокируя рендеринг
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(registerSW, { timeout: 2000 });
+    } else {
+        window.addEventListener('load', registerSW);
+    }
 }
 

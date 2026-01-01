@@ -50,17 +50,34 @@ self.addEventListener('activate', (event) => {
     self.skipWaiting();
 });
 
-// Перехват запросов
+// Перехват запросов (оптимизированная стратегия Cache First с Network Fallback)
 self.addEventListener('fetch', (event) => {
+    // Пропускаем не-GET запросы и внешние ресурсы
+    if (event.request.method !== 'GET' || !event.request.url.startsWith(self.location.origin)) {
+        return;
+    }
+    
     event.respondWith(
         caches.match(event.request)
-            .then((response) => {
-                // Возвращаем из кэша, если есть
-                if (response) {
-                    return response;
+            .then((cachedResponse) => {
+                // Стратегия: Cache First для статических ресурсов
+                if (cachedResponse) {
+                    // Обновляем кэш в фоне (stale-while-revalidate)
+                    fetch(event.request).then((networkResponse) => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            const responseToCache = networkResponse.clone();
+                            caches.open(CACHE_NAME).then((cache) => {
+                                cache.put(event.request, responseToCache);
+                            });
+                        }
+                    }).catch(() => {
+                        // Игнорируем ошибки фонового обновления
+                    });
+                    
+                    return cachedResponse;
                 }
                 
-                // Иначе загружаем из сети
+                // Если нет в кэше, загружаем из сети
                 return fetch(event.request).then((response) => {
                     // Проверяем валидность ответа
                     if (!response || response.status !== 200 || response.type !== 'basic') {
@@ -70,6 +87,7 @@ self.addEventListener('fetch', (event) => {
                     // Клонируем ответ для кэширования
                     const responseToCache = response.clone();
                     
+                    // Кэшируем только успешные ответы
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
                     });
@@ -80,6 +98,8 @@ self.addEventListener('fetch', (event) => {
                     if (event.request.destination === 'document') {
                         return caches.match('./index.html');
                     }
+                    // Для других ресурсов возвращаем пустой ответ
+                    return new Response('', { status: 408, statusText: 'Request Timeout' });
                 });
             })
     );

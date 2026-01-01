@@ -33,23 +33,55 @@ export class Storage {
         collection.push(item);
         try {
             localStorage.setItem(this.storageKey, JSON.stringify(collection));
+            // Инвалидируем кэш
+            this._invalidateCollectionCache();
             console.log('Отговорка добавлена в избранное. Всего в избранном:', collection.length);
             return true;
         } catch (e) {
             console.error('Ошибка сохранения в localStorage:', e);
+            // Пробуем очистить старые данные если переполнение
+            if (e.name === 'QuotaExceededError') {
+                try {
+                    // Удаляем самые старые записи
+                    collection.sort((a, b) => (a.id || 0) - (b.id || 0));
+                    const reduced = collection.slice(-100); // Оставляем последние 100
+                    localStorage.setItem(this.storageKey, JSON.stringify(reduced));
+                    this._invalidateCollectionCache();
+                    console.warn('localStorage переполнен, удалены старые записи');
+                } catch (cleanupErr) {
+                    console.error('Ошибка очистки localStorage:', cleanupErr);
+                }
+            }
             return false;
         }
     }
 
-    // Получить коллекцию
+    // Получить коллекцию (с мемоизацией для производительности)
     getCollection() {
+        // Проверяем кэш (инвалидируется при изменениях)
+        if (this._collectionCache && this._collectionCacheValid) {
+            return this._collectionCache;
+        }
+        
         try {
             const data = localStorage.getItem(this.storageKey);
-            return data ? JSON.parse(data) : [];
+            const collection = data ? JSON.parse(data) : [];
+            
+            // Кэшируем результат
+            this._collectionCache = collection;
+            this._collectionCacheValid = true;
+            
+            return collection;
         } catch (e) {
             console.error('Error reading collection:', e);
             return [];
         }
+    }
+    
+    // Инвалидация кэша
+    _invalidateCollectionCache() {
+        this._collectionCacheValid = false;
+        this._collectionCache = null;
     }
 
     // Удалить из коллекции
@@ -57,6 +89,8 @@ export class Storage {
         const collection = this.getCollection();
         const filtered = collection.filter(item => item.id !== id);
         localStorage.setItem(this.storageKey, JSON.stringify(filtered));
+        // Инвалидируем кэш
+        this._invalidateCollectionCache();
         return filtered;
     }
 

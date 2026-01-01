@@ -10,10 +10,40 @@ export class UI {
     init() {
         this.setupEventListeners();
         this.loadTopExcuses();
-        // Загружаем топ каждые 30 секунд для обновления
-        setInterval(() => {
-            this.loadTopExcuses();
-        }, 30000);
+        
+        // Оптимизация: используем requestIdleCallback для фоновых задач
+        this.topExcusesInterval = null;
+        this.scheduleTopExcusesUpdate();
+    }
+    
+    // Планирование обновления топа с оптимизацией
+    scheduleTopExcusesUpdate() {
+        if ('requestIdleCallback' in window) {
+            const updateTop = () => {
+                this.loadTopExcuses();
+                this.topExcusesInterval = setTimeout(() => {
+                    if ('requestIdleCallback' in window) {
+                        requestIdleCallback(updateTop, { timeout: 30000 });
+                    } else {
+                        this.topExcusesInterval = setTimeout(updateTop, 30000);
+                    }
+                }, 30000);
+            };
+            requestIdleCallback(updateTop, { timeout: 30000 });
+        } else {
+            // Fallback для старых браузеров
+            this.topExcusesInterval = setInterval(() => {
+                this.loadTopExcuses();
+            }, 30000);
+        }
+    }
+    
+    // Очистка ресурсов
+    destroy() {
+        if (this.topExcusesInterval) {
+            clearInterval(this.topExcusesInterval);
+            this.topExcusesInterval = null;
+        }
     }
 
     setupEventListeners() {
@@ -112,14 +142,23 @@ export class UI {
         }
     }
 
-    // Генерация случайной отговорки
+    // Генерация случайной отговорки (оптимизировано)
     async generateRandom() {
+        // Отменяем предыдущую анимацию если есть
+        const terminal = document.getElementById('terminal-content');
+        if (terminal) {
+            this.cancelTypewriterEffect(terminal);
+        }
+        
         // Анимация генерации
         this.animateGeneration();
         await this.delay(500);
         
-        const excuse = this.generator.generateRandom();
-        this.displayExcuse(excuse);
+        // Генерируем в следующем фрейме для плавности
+        requestAnimationFrame(() => {
+            const excuse = this.generator.generateRandom();
+            this.displayExcuse(excuse);
+        });
     }
 
     // Генерация по категории
@@ -132,14 +171,23 @@ export class UI {
         this.displayExcuse(excuse);
     }
 
-    // Генерация абсурдной отговорки
+    // Генерация абсурдной отговорки (оптимизировано)
     async generateAbsurd() {
+        // Отменяем предыдущую анимацию если есть
+        const terminal = document.getElementById('terminal-content');
+        if (terminal) {
+            this.cancelTypewriterEffect(terminal);
+        }
+        
         // Специальная анимация для абсурда
         this.animateAbsurdGeneration();
         await this.delay(800);
         
-        const excuse = this.generator.generateAbsurd();
-        this.displayExcuse(excuse);
+        // Генерируем в следующем фрейме для плавности
+        requestAnimationFrame(() => {
+            const excuse = this.generator.generateAbsurd();
+            this.displayExcuse(excuse);
+        });
     }
 
     // Анимация генерации
@@ -593,7 +641,7 @@ export class UI {
         }
     }
     
-    // Загрузить избранные отговорки
+    // Загрузить избранные отговорки (оптимизировано с DocumentFragment)
     loadFavorites() {
         const favoritesList = document.getElementById('favorites-list');
         if (!favoritesList) {
@@ -604,70 +652,65 @@ export class UI {
         const favorites = this.storage.getCollection();
         console.log('Загрузка избранного. Найдено элементов:', favorites.length);
         
+        // Используем DocumentFragment для batch DOM updates
+        const fragment = document.createDocumentFragment();
+        
         if (favorites.length === 0) {
-            favoritesList.innerHTML = '<div class="empty-message">У вас пока нет избранных отговорок. Используйте ⭐ для добавления!</div>';
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'empty-message';
+            emptyMsg.textContent = 'У вас пока нет избранных отговорок. Используйте ⭐ для добавления!';
+            fragment.appendChild(emptyMsg);
         } else {
-            // Сортируем по дате (новые сверху)
-            const sortedFavorites = [...favorites].sort((a, b) => {
-                const dateA = new Date(a.date || a.id || 0);
-                const dateB = new Date(b.date || b.id || 0);
+            // Сортируем по дате (новые сверху) - оптимизированная сортировка
+            const sortedFavorites = favorites.slice().sort((a, b) => {
+                const dateA = a.date ? new Date(a.date).getTime() : (a.id || 0);
+                const dateB = b.date ? new Date(b.date).getTime() : (b.id || 0);
                 return dateB - dateA;
             });
             
-            favoritesList.innerHTML = sortedFavorites.map(item => {
-                // Экранируем HTML для безопасности
-                const originalText = String(item.text || '');
-                const safeText = originalText
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
+            // Создаем элементы в цикле
+            sortedFavorites.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'favorite-item';
                 
-                // Для data-атрибута используем двойное экранирование кавычек
-                const dataText = safeText.replace(/"/g, '&quot;');
+                const textDiv = document.createElement('div');
+                textDiv.className = 'favorite-text';
+                textDiv.textContent = item.text || ''; // textContent автоматически экранирует HTML
+                itemDiv.appendChild(textDiv);
                 
-                return `
-                <div class="favorite-item">
-                    <div class="favorite-text">${safeText}</div>
-                    <div class="favorite-actions">
-                        <button class="favorite-btn favorite-copy" data-text="${dataText}" title="Копировать">📋</button>
-                        <button class="favorite-btn favorite-remove" data-id="${item.id}" title="Удалить">🗑️</button>
-                    </div>
-                </div>
-            `;
-            }).join('');
-            
-            // Добавляем обработчики событий
-            favoritesList.querySelectorAll('.favorite-copy').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'favorite-actions';
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'favorite-btn favorite-copy';
+                copyBtn.title = 'Копировать';
+                copyBtn.textContent = '📋';
+                copyBtn.dataset.text = item.text || '';
+                copyBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const target = e.target.closest('.favorite-copy') || e.target;
-                    const text = target.dataset.text;
-                    if (text) {
-                        // Декодируем HTML-сущности обратно
-                        const decodedText = text
-                            .replace(/&quot;/g, '"')
-                            .replace(/&lt;/g, '<')
-                            .replace(/&gt;/g, '>')
-                            .replace(/&amp;/g, '&')
-                            .replace(/&#39;/g, "'");
-                        this.copyToClipboard(decodedText, target);
-                    }
+                    this.copyToClipboard(item.text, copyBtn);
                 });
-            });
-            
-            favoritesList.querySelectorAll('.favorite-remove').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'favorite-btn favorite-remove';
+                removeBtn.title = 'Удалить';
+                removeBtn.textContent = '🗑️';
+                removeBtn.dataset.id = item.id;
+                removeBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const target = e.target.closest('.favorite-remove') || e.target;
-                    const id = target.dataset.id;
-                    if (id) {
-                        this.removeFavorite(parseInt(id));
-                    }
+                    this.removeFavorite(parseInt(item.id));
                 });
+                
+                actionsDiv.appendChild(copyBtn);
+                actionsDiv.appendChild(removeBtn);
+                itemDiv.appendChild(actionsDiv);
+                fragment.appendChild(itemDiv);
             });
         }
+        
+        // Один раз обновляем DOM
+        favoritesList.innerHTML = '';
+        favoritesList.appendChild(fragment);
     }
     
     // Удалить из избранного
@@ -750,36 +793,60 @@ export class UI {
         }
     }
 
-    // Эффект печатной машинки
+    // Эффект печатной машинки (оптимизирован с requestAnimationFrame)
     typewriterEffect(element, text, onComplete) {
+        if (!element || !text) return;
+        
         element.textContent = '';
         element.classList.add('typewriter');
         
         let index = 0;
         const speed = 30; // Скорость печати
+        let lastTime = performance.now();
+        let animationFrameId = null;
         
-        const type = () => {
-            if (index < text.length) {
-                // Добавляем символ постепенно
-                element.textContent = text.substring(0, index + 1);
-                index++;
-                setTimeout(type, speed);
-            } else {
-                // Анимация завершена - добавляем курсор плавно
-                element.classList.remove('typewriter');
-                // Используем textContent для текста и добавляем курсор отдельно
-                const cursor = document.createElement('span');
-                cursor.className = 'cursor-blink';
-                cursor.textContent = '_';
-                element.appendChild(cursor);
-                
-                if (onComplete) {
-                    onComplete();
+        const type = (currentTime) => {
+            const elapsed = currentTime - lastTime;
+            
+            if (elapsed >= speed) {
+                if (index < text.length) {
+                    // Batch DOM updates - обновляем только при необходимости
+                    element.textContent = text.substring(0, index + 1);
+                    index++;
+                    lastTime = currentTime;
+                } else {
+                    // Анимация завершена
+                    element.classList.remove('typewriter');
+                    const cursor = document.createElement('span');
+                    cursor.className = 'cursor-blink';
+                    cursor.textContent = '_';
+                    element.appendChild(cursor);
+                    
+                    if (onComplete) {
+                        onComplete();
+                    }
+                    return; // Завершаем анимацию
                 }
             }
+            
+            animationFrameId = requestAnimationFrame(type);
         };
         
-        type();
+        animationFrameId = requestAnimationFrame(type);
+        
+        // Сохраняем ID для возможности отмены
+        if (!this.typewriterAnimations) {
+            this.typewriterAnimations = new Map();
+        }
+        this.typewriterAnimations.set(element, animationFrameId);
+    }
+    
+    // Отмена анимации печатной машинки
+    cancelTypewriterEffect(element) {
+        if (this.typewriterAnimations && this.typewriterAnimations.has(element)) {
+            cancelAnimationFrame(this.typewriterAnimations.get(element));
+            this.typewriterAnimations.delete(element);
+        }
     }
 
     // Переключение селектора категорий

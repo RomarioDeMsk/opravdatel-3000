@@ -14,7 +14,23 @@
     <meta name="apple-mobile-web-app-title" content="Оправдатель 3000">
     
     <title>Оправдатель 3000 - Генератор отговорок</title>
+    
+    <!-- Preload критических ресурсов -->
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preload" href="app.js" as="script">
+    <link rel="preload" href="data/excuses.json" as="fetch" crossorigin>
+    <link rel="preload" href="data/templates.json" as="fetch" crossorigin>
+    
+    <!-- DNS prefetch для внешних ресурсов -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- Stylesheet с defer для неблокирующей загрузки -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Preconnect для шрифтов -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
     <div class="container">
