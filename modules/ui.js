@@ -520,7 +520,6 @@ export class UI {
                 } else {
                     console.warn('Не удалось лайкнуть отговорку (возможно, уже проголосовано)');
                 }
-                }
                 
                 // Убираем класс анимации и скрываем панель голосования
                 terminal.classList.remove('super-like-animation');
