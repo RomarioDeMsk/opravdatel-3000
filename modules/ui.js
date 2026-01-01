@@ -502,9 +502,9 @@ export class UI {
                 terminal.classList.remove(`swipe-${direction}`);
                 this.hideVotingPanel();
                 
-                // Показываем сообщение о следующей отговорке
+                // Генерируем новую отговорку той же категории с чередованием типов
                 setTimeout(() => {
-                    this.showNextExcuseMessage();
+                    this.generateNextExcuse();
                 }, 300);
             }, 500);
         }
@@ -516,6 +516,49 @@ export class UI {
         if (terminalContent) {
             terminalContent.innerHTML = '<span class="cursor-blink">Нажмите кнопку для новой отговорки...</span>';
         }
+    }
+    
+    // Генерация следующей отговорки после голосования
+    async generateNextExcuse() {
+        if (!this.currentExcuse) {
+            return;
+        }
+        
+        // Определяем категорию текущей отговорки
+        const category = this.currentExcuse.category || 'all';
+        
+        // Определяем следующий тип отговорки (чередование)
+        const nextType = this.getNextExcuseType();
+        
+        // Генерируем новую отговорку
+        const newExcuse = this.generator.generateRandomByType(category, nextType, this.currentExcuse.text);
+        
+        if (newExcuse) {
+            // Обновляем тип для следующей итерации
+            this.lastExcuseType = nextType;
+            
+            // Отображаем новую отговорку
+            this.displayExcuse(newExcuse);
+        } else {
+            // Если не удалось сгенерировать, показываем сообщение
+            this.showNextExcuseMessage();
+        }
+    }
+    
+    // Получить следующий тип отговорки (чередование)
+    getNextExcuseType() {
+        // Если это первая отговорка или тип не определен, выбираем случайно
+        if (!this.lastExcuseType) {
+            const types = ['serious', 'funny', 'absurd'];
+            return types[Math.floor(Math.random() * types.length)];
+        }
+        
+        // Чередуем типы: serious -> funny -> absurd -> serious...
+        const typeOrder = ['serious', 'funny', 'absurd'];
+        const currentIndex = typeOrder.indexOf(this.lastExcuseType);
+        const nextIndex = (currentIndex + 1) % typeOrder.length;
+        
+        return typeOrder[nextIndex];
     }
     
     // Супер лайк (лайк + избранное)

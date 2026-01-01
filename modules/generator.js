@@ -12,6 +12,96 @@ export class ExcuseGenerator {
         this.usedCombinations = new Set(); // Использованные комбинации шаблонов
     }
 
+    // Генерация случайной отговорки по типу (серьезная, смешная, абсурдная)
+    generateRandomByType(category = 'all', type = null, excludeText = null, maxAttempts = 15) {
+        let attempt = 0;
+        let excuse = null;
+        
+        // Фильтруем по категории
+        let filtered = this.excuses;
+        if (category !== 'all') {
+            filtered = this.excuses.filter(e => e.category === category);
+            if (filtered.length === 0) {
+                filtered = this.excuses.filter(e => e.category === 'universal');
+            }
+        }
+        
+        // Фильтруем по типу
+        if (type === 'absurd') {
+            filtered = filtered.filter(e => e.isAbsurd === true);
+        } else if (type === 'funny') {
+            // Смешные: не абсурдные, но с юмором
+            const funnyKeywords = ['кот', 'аллергия', 'случайно', 'объявил', 'требует', 'решил', 'начал', 'попал'];
+            filtered = filtered.filter(e => {
+                if (e.isAbsurd) return false;
+                return funnyKeywords.some(keyword => e.text.toLowerCase().includes(keyword));
+            });
+        } else if (type === 'serious') {
+            // Серьезные: не абсурдные и без явного юмора
+            const funnyKeywords = ['кот', 'аллергия', 'случайно', 'объявил', 'требует', 'решил', 'начал'];
+            filtered = filtered.filter(e => {
+                if (e.isAbsurd) return false;
+                return !funnyKeywords.some(keyword => e.text.toLowerCase().includes(keyword));
+            });
+        }
+        
+        // Исключаем предыдущую отговорку
+        if (excludeText) {
+            filtered = filtered.filter(e => e.text !== excludeText);
+        }
+        
+        // Если после фильтрации ничего не осталось, используем все отговорки категории
+        if (filtered.length === 0) {
+            filtered = category !== 'all' 
+                ? this.excuses.filter(e => e.category === category || e.category === 'universal')
+                : this.excuses;
+            
+            if (excludeText) {
+                filtered = filtered.filter(e => e.text !== excludeText);
+            }
+        }
+        
+        if (filtered.length === 0) {
+            return {
+                text: "К сожалению, база отговорок пуста. Попробуйте позже.",
+                category: category !== 'all' ? category : 'universal',
+                isAbsurd: false,
+                id: 'empty'
+            };
+        }
+        
+        // Исключаем недавно использованные
+        while (attempt < maxAttempts) {
+            const available = filtered.filter(e => !this.recentExcuses.has(e.text));
+            const source = available.length > 0 ? available : filtered;
+            const randomIndex = Math.floor(Math.random() * source.length);
+            excuse = source[randomIndex];
+            
+            if (excuse && excuse.text && !this.recentExcuses.has(excuse.text)) {
+                this.addToRecent(excuse.text);
+                return excuse;
+            }
+            
+            attempt++;
+        }
+        
+        // Если не удалось найти уникальную, возвращаем любую
+        if (filtered.length > 0) {
+            excuse = filtered[Math.floor(Math.random() * filtered.length)];
+            if (excuse && excuse.text) {
+                this.addToRecent(excuse.text);
+                return excuse;
+            }
+        }
+        
+        return {
+            text: "Ошибка генерации. Попробуйте еще раз.",
+            category: category !== 'all' ? category : 'universal',
+            isAbsurd: false,
+            id: 'error'
+        };
+    }
+    
     // Генерация случайной отговорки (всегда используем готовые отговорки)
     generateRandom(category = 'all', maxAttempts = 10) {
         let attempt = 0;
