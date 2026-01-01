@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Оправдатель 3000 - Генератор отговорок для любых жизненных ситуаций. Быстрые шаблоны, генератор абсурда и умный помощник.">
+    <meta name="keywords" content="отговорки, генератор отговорок, оправдания, юмор, абсурд">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Оправдатель 3000">
+    
+    <title>Оправдатель 3000 - Генератор отговорок</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-text">ОПРАВДАТЕЛЬ</span>
+                <span class="logo-number">3000</span>
+            </h1>
+            <p class="tagline">Генератор отговорок для любых жизненных ситуаций</p>
+        </header>
+
+        <!-- Основная область -->
+        <main class="main">
+            <!-- Панель управления -->
+            <div class="control-panel">
+                <button class="btn btn-primary" id="btn-random">
+                    <span class="btn-icon">⚡</span>
+                    Случайная отмазка
+                </button>
+                
+                <button class="btn btn-secondary" id="btn-category">
+                    <span class="btn-icon">📁</span>
+                    Выбрать категорию
+                </button>
+                
+                <button class="btn btn-absurd" id="btn-absurd">
+                    <span class="btn-icon">🤪</span>
+                    Абсурдный режим
+                </button>
+                
+                <button class="btn btn-ai" id="btn-ai">
+                    <span class="btn-icon">🤖</span>
+                    Умный помощник
+                </button>
+            </div>
+
+            <!-- Выбор категории (скрыт по умолчанию) -->
+            <div class="category-selector" id="category-selector" style="display: none;">
+                <div class="category-grid">
+                    <button class="category-btn" data-category="work">💼 Работа</button>
+                    <button class="category-btn" data-category="school">🎓 Учеба</button>
+                    <button class="category-btn" data-category="friends">👥 Друзья</button>
+                    <button class="category-btn" data-category="family">👨‍👩‍👧 Семья</button>
+                    <button class="category-btn" data-category="date">💑 Свидание</button>
+                    <button class="category-btn" data-category="universal">🌍 Универсальные</button>
+                </div>
+            </div>
+
+            <!-- ИИ помощник (скрыт по умолчанию) -->
+            <div class="ai-assistant" id="ai-assistant" style="display: none;">
+                <div class="ai-input-wrapper">
+                    <textarea 
+                        id="ai-input" 
+                        class="ai-input" 
+                        placeholder="Опишите вашу безвыходную ситуацию... Например: 'Не хочу идти на день рождения к тёще'"
+                        rows="3"
+                    ></textarea>
+                    <button class="btn btn-primary" id="btn-ai-generate">Сгенерировать</button>
+                </div>
+            </div>
+
+            <!-- Генератор отговорок -->
+            <div class="excuse-display-wrapper">
+                <div class="excuse-display-header">
+                    <div class="excuse-display-title">
+                        <span class="title-icon">✨</span>
+                        <span class="title-text">ГЕНЕРАТОР ОТГОВОРОК</span>
+                        <span class="title-badge">v3.0</span>
+                    </div>
+                    <div class="excuse-display-status">
+                        <span class="status-dot status-active"></span>
+                        <span class="status-text">Готов к работе</span>
+                    </div>
+                </div>
+                <div class="excuse-display" id="terminal">
+                    <div class="excuse-display-content" id="terminal-content">
+                        <span class="cursor-blink">_</span>
+                    </div>
+                    <div class="excuse-display-glow"></div>
+                </div>
+                
+                <!-- Контейнер для 3 вариантов (скрыт по умолчанию) -->
+                <div class="variants-container" id="variants-container" style="display: none;">
+                    <h3 class="variants-title">Выберите вариант:</h3>
+                    <div class="variants-grid" id="variants-grid">
+                        <!-- Варианты будут добавлены через JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель действий -->
+            <div class="action-panel">
+                <button class="action-btn" id="btn-copy" title="Копировать">
+                    <span class="action-icon">📋</span>
+                    <span class="action-text">Копировать</span>
+                </button>
+                <button class="action-btn" id="btn-share" title="Поделиться">
+                    <span class="action-icon">📤</span>
+                    <span class="action-text">Поделиться</span>
+                </button>
+                <button class="action-btn" id="btn-favorite" title="В избранное">
+                    <span class="action-icon">⭐</span>
+                    <span class="action-text">В избранное</span>
+                </button>
+                <button class="action-btn" id="btn-collection" title="Моя коллекция">
+                    <span class="action-icon">📚</span>
+                    <span class="action-text">Коллекция</span>
+                </button>
+            </div>
+
+            <!-- Топ отговорок -->
+            <div class="top-excuses">
+                <h2 class="section-title">🔥 Топ отговорок</h2>
+                <div class="top-list" id="top-list">
+                    <!-- Заполнится через JS -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Модальное окно коллекции -->
+        <div class="modal" id="collection-modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Моя коллекция</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="collection-list">
+                    <p class="empty-message">Коллекция пуста. Сохраните понравившиеся отговорки!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Футер -->
+        <footer class="footer">
+            <p>Оправдатель 3000 © 2026</p>
+        </footer>
+    </div>
+
+    <!-- Скрипты -->
+    <script type="module" src="app.js"></script>
+    
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>
+
