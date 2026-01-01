@@ -81,42 +81,31 @@ if ('serviceWorker' in navigator) {
             }
         }
         
-            // Регистрируем/обновляем Service Worker
-            navigator.serviceWorker.register('./sw.js', {
-                updateViaCache: 'none'
-            }).then((reg) => {
-                console.log(`Service Worker v${currentVersion} активен`);
-                
-                // Проверяем обновления в фоне
-                reg.update();
-                
-                // Слушаем обновления Service Worker
-                reg.addEventListener('updatefound', () => {
-                    const newWorker = reg.installing;
-                    if (newWorker) {
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // Новый Service Worker установлен, но не активирован
-                                console.log('Доступна новая версия Service Worker');
-                                // НЕ перезагружаем автоматически - пользователь может сделать это сам
-                            }
-                        });
-                    }
-                });
-            }).catch((err) => {
-                console.error('Ошибка регистрации Service Worker:', err);
+        // Регистрируем/обновляем Service Worker (всегда, независимо от версии)
+        navigator.serviceWorker.register('./sw.js', {
+            updateViaCache: 'none'
+        }).then((reg) => {
+            console.log(`Service Worker v${currentVersion} активен`);
+            
+            // Проверяем обновления в фоне
+            reg.update();
+            
+            // Слушаем обновления Service Worker
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Новый Service Worker установлен, но не активирован
+                            console.log('Доступна новая версия Service Worker');
+                            // НЕ перезагружаем автоматически - пользователь может сделать это сам
+                        }
+                    });
+                }
             });
-        } else {
-            // Версия не изменилась - просто регистрируем/обновляем
-            navigator.serviceWorker.register('./sw.js', {
-                updateViaCache: 'none'
-            }).then((reg) => {
-                console.log(`Service Worker v${currentVersion} активен`);
-                reg.update();
-            }).catch((err) => {
-                console.error('Ошибка регистрации Service Worker:', err);
-            });
-        }
+        }).catch((err) => {
+            console.error('Ошибка регистрации Service Worker:', err);
+        });
     });
 }
 
