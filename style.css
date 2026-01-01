@@ -1070,14 +1070,46 @@ body::after {
     box-shadow: var(--shadow-sm);
 }
 
+/* Кнопка лайка - зеленый цвет */
+.vote-btn.vote-like {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.vote-btn.vote-like:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+}
+
+.vote-btn.vote-like .vote-icon {
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+}
+
 .vote-btn.vote-like.voted {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
-    border-color: rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Кнопка дизлайка - красный цвет */
+.vote-btn.vote-dislike {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.vote-btn.vote-dislike:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+.vote-btn.vote-dislike .vote-icon {
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
 }
 
 .vote-btn.vote-dislike.voted {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
-    border-color: rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 .vote-icon {
