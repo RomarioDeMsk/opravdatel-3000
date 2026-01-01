@@ -22,19 +22,20 @@ export class ExcuseGenerator {
             let filtered = this.excuses;
             
             if (category !== 'all') {
+                // Фильтруем строго по выбранной категории
                 filtered = this.excuses.filter(e => e.category === category);
-            }
-            
-            // Если нет отговорок в категории, пробуем все
-            if (filtered.length === 0) {
-                filtered = this.excuses;
+                
+                // Если в категории нет отговорок, используем универсальные как запасной вариант
+                if (filtered.length === 0) {
+                    filtered = this.excuses.filter(e => e.category === 'universal');
+                }
             }
             
             if (filtered.length === 0) {
                 // Если вообще нет отговорок, возвращаем заглушку
                 return {
                     text: "К сожалению, база отговорок пуста. Попробуйте позже.",
-                    category: 'universal',
+                    category: category !== 'all' ? category : 'universal',
                     isAbsurd: false,
                     id: 'empty'
                 };
@@ -55,20 +56,28 @@ export class ExcuseGenerator {
             attempt++;
         }
         
-        // Если не удалось найти уникальную, возвращаем любую
+        // Если не удалось найти уникальную, возвращаем любую из категории
         if (!excuse) {
-            const filtered = category !== 'all' 
-                ? this.excuses.filter(e => e.category === category)
-                : this.excuses;
+            let filtered = this.excuses;
+            
+            if (category !== 'all') {
+                filtered = this.excuses.filter(e => e.category === category);
+                
+                // Если в категории нет отговорок, используем универсальные
+                if (filtered.length === 0) {
+                    filtered = this.excuses.filter(e => e.category === 'universal');
+                }
+            }
             
             if (filtered.length > 0) {
                 excuse = filtered[Math.floor(Math.random() * filtered.length)];
             } else if (this.excuses.length > 0) {
+                // Только если category === 'all', используем все отговорки
                 excuse = this.excuses[Math.floor(Math.random() * this.excuses.length)];
             } else {
                 return {
                     text: "К сожалению, база отговорок пуста. Попробуйте позже.",
-                    category: 'universal',
+                    category: category !== 'all' ? category : 'universal',
                     isAbsurd: false,
                     id: 'empty'
                 };
@@ -83,7 +92,7 @@ export class ExcuseGenerator {
         // Финальная заглушка
         return {
             text: "Ошибка генерации. Попробуйте еще раз.",
-            category: 'universal',
+            category: category !== 'all' ? category : 'universal',
             isAbsurd: false,
             id: 'error'
         };
